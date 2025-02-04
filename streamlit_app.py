@@ -2,13 +2,15 @@ import streamlit as st
 import boto3
 import json
 
-# Initialize the Bedrock Runtime client
+# Initialize Bedrock client
 bedrock_runtime = boto3.client('bedrock-runtime', region_name='us-west-2')
 
 # Function to call Claude AI via AWS Bedrock
-def call_claude_api(user_prompt):
+def call_claude_api(sql_code, task_type):
+    prompt = f"Task: {task_type}\n\nSQL Code:\n{sql_code}\n\nProvide the response accordingly."
+
     kwargs = {
-        "modelId": "anthropic.claude-3-5-sonnet-20241022-v2:0",
+        "modelId": "anthropic.claude-3-5-sonnet-20240620-v1:0",
         "contentType": "application/json",
         "accept": "application/json",
         "body": json.dumps({
@@ -21,9 +23,7 @@ def call_claude_api(user_prompt):
             "messages": [
                 {
                     "role": "user",
-                    "content": [
-                        {"type": "text", "text": user_prompt}
-                    ]
+                    "content": [{"type": "text", "text": prompt}]
                 }
             ]
         })
@@ -32,24 +32,35 @@ def call_claude_api(user_prompt):
     try:
         response = bedrock_runtime.invoke_model(**kwargs)
         body = json.loads(response['body'].read())
-        return body  # Adjust as per Claude's response structure
+        return {"output": body["content"][0]["text"]}
     except Exception as e:
-        return {"error": str(e)}
+        st.error(f"Error: {str(e)}")
+        return {"output": "Error processing request"}
 
 # Streamlit UI
 st.title("ref[AI]ne: SQL Code Quality Improvement Tool")
+st.subheader("Paste your SQL code here:")
 
-# Text area for SQL code input
-user_sql_code = st.text_area("Paste your SQL code here:", height=300)
+# SQL Code Input
+user_sql_code = st.text_area("", height=300)
 
-# Button to process code with Claude
-if st.button("Improve Code"):
-    if user_sql_code.strip():
-        response = call_claude_api(user_sql_code)
-        if "error" in response:
-            st.error(f"Error: {response['error']}")
-        else:
-            st.subheader("Optimized SQL Code:")
-            st.code(response.get("output", "No response received"), language="sql")  # Adjust based on Claude's response structure
-    else:
-        st.warning("Please enter some SQL code.")
+# Buttons for actions
+if st.button("Fix Syntax Errors"):
+    response = call_claude_api(user_sql_code, "fix_syntax")
+    st.subheader("Fixed SQL Code:")
+    st.code(response.get("output", "Error processing request"), language="sql", line_numbers=True)
+
+if st.button("Standardize Code"):
+    response = call_claude_api(user_sql_code, "standardize_code")
+    st.subheader("Standardized SQL Code:")
+    st.code(response.get("output", "Error processing request"), language="sql", line_numbers=True)
+
+if st.button("Generate Documentation"):
+    response = call_claude_api(user_sql_code, "generate_documentation")
+    st.subheader("Generated Documentation:")
+    st.markdown(response.get("output", "Error processing request"))
+
+if st.button("Optimize SQL Code"):
+    response = call_claude_api(user_sql_code, "optimize_sql")
+    st.subheader("Optimized SQL Code:")
+    st.code(response.get("output", "Error processing request"), language="sql", line_numbers=True)
