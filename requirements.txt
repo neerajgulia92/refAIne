@@ -1,2 +1,9 @@
 boto3
+fastapi
+uvicorn
+PIL
+os
+json
+threading
+requests
 streamlit
