@@ -14,12 +14,50 @@ st.set_page_config(page_title="ref[AI]ne - SQL Code Quality Tool", layout="wide"
 # Path for logo
 image_path = "logo.png"
 
-# Check if the logo exists
-if os.path.exists(image_path):
-    logo = Image.open(image_path)
-    st.image(logo, use_container_width=True)
-else:
-    st.warning(f"Logo image not found at {image_path}. Please ensure the file exists.")
+# Custom CSS to style the logo and header
+st.markdown(
+    """
+    <style>
+    .header-container {
+        display: flex;
+        align-items: center;
+        gap: 20px;
+    }
+    .header-logo img {
+        width: 80px; /* Adjust the width to make the logo smaller */
+        height: auto;
+        object-fit: contain; /* Prevent distortion */
+    }
+    .header-title {
+        font-size: 24px;
+        font-weight: bold;
+    }
+    </style>
+    """,
+    unsafe_allow_html=True,
+)
+
+# Logo and Title
+import base64
+
+with open(image_path, "rb") as image_file:
+    logo_base64 = base64.b64encode(image_file.read()).decode("utf-8")
+
+logo_html = f"""
+<div class="header-container" style="display: flex; align-items: center; background-color: #f5f5f5; padding: 10px; border-radius: 8px;">
+    <div class="header-logo" style="margin-right: 15px;">
+        <img src="data:image/png;base64,{logo_base64}" style="width: 80px; height: auto;">
+    </div>
+    <div class="header-title" style="font-size: 24px; font-weight: bold; color: #2c3e50;">
+        AI-Powered SQL Code Quality Tool
+        <div style="font-size: 14px; font-weight: normal; color: #7f8c8d;">
+            Enhance, standardize, optimize, and document your SQL code effortlessly.
+        </div>
+    </div>
+</div>
+"""
+
+st.markdown(logo_html, unsafe_allow_html=True)
 
 # Initialize AWS Bedrock Client
 bedrock_runtime = boto3.client('bedrock-runtime', region_name='us-west-2')
@@ -87,7 +125,6 @@ def run_fastapi():
 threading.Thread(target=run_fastapi, daemon=True).start()
 
 # Streamlit UI
-st.title("SQL Code Quality Improvement Tool")
 st.subheader("Paste your SQL code here:")
 user_sql_code = st.text_area("", height=300)
 
@@ -99,19 +136,25 @@ def fetch_from_api(endpoint, sql_code):
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Buttons for Actions
-if st.button("Fix Syntax Errors"):
-    st.subheader("Fixed SQL Code:")
-    st.code(fetch_from_api("fix_syntax", user_sql_code), language="sql", line_numbers=True)
+# Buttons for Actions - Side by Side Layout
+col1, col2, col3, col4 = st.columns(4)
 
-if st.button("Standardize Code"):
-    st.subheader("Standardized SQL Code:")
-    st.code(fetch_from_api("standardize", user_sql_code), language="sql", line_numbers=True)
+with col1:
+    if st.button("Fix Syntax Errors"):
+        st.subheader("Fixed SQL Code:")
+        st.code(fetch_from_api("fix_syntax", user_sql_code), language="sql", line_numbers=True)
 
-if st.button("Generate Documentation"):
-    st.subheader("Generated Documentation:")
-    st.markdown(fetch_from_api("document", user_sql_code))
+with col2:
+    if st.button("Standardize Code"):
+        st.subheader("Standardized SQL Code:")
+        st.code(fetch_from_api("standardize", user_sql_code), language="sql", line_numbers=True)
 
-if st.button("Optimize SQL Code"):
-    st.subheader("Optimized SQL Code:")
-    st.code(fetch_from_api("optimize", user_sql_code), language="sql", line_numbers=True)
+with col3:
+    if st.button("Generate Documentation"):
+        st.subheader("Generated Documentation:")
+        st.markdown(fetch_from_api("document", user_sql_code))
+
+with col4:
+    if st.button("Optimize SQL Code"):
+        st.subheader("Optimized SQL Code:")
+        st.code(fetch_from_api("optimize", user_sql_code), language="sql", line_numbers=True)
