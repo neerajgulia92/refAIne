@@ -136,25 +136,19 @@ def fetch_from_api(endpoint, sql_code):
     except Exception as e:
         return f"Error: {str(e)}"
 
-# Buttons for Actions - Side by Side Layout
+# Buttons for Actions in One Line
 col1, col2, col3, col4 = st.columns(4)
+output_text = ""
 
-with col1:
-    if st.button("Fix Syntax Errors"):
-        st.subheader("Fixed SQL Code:")
-        st.code(fetch_from_api("fix_syntax", user_sql_code), language="sql", line_numbers=True)
+if col1.button("Fix Syntax Errors"):
+    output_text = fetch_from_api("fix_syntax", user_sql_code)
+if col2.button("Standardize Code"):
+    output_text = fetch_from_api("standardize", user_sql_code)
+if col3.button("Generate Documentation"):
+    output_text = fetch_from_api("document", user_sql_code)
+if col4.button("Optimize SQL Code"):
+    output_text = fetch_from_api("optimize", user_sql_code)
 
-with col2:
-    if st.button("Standardize Code"):
-        st.subheader("Standardized SQL Code:")
-        st.code(fetch_from_api("standardize", user_sql_code), language="sql", line_numbers=True)
-
-with col3:
-    if st.button("Generate Documentation"):
-        st.subheader("Generated Documentation:")
-        st.markdown(fetch_from_api("document", user_sql_code))
-
-with col4:
-    if st.button("Optimize SQL Code"):
-        st.subheader("Optimized SQL Code:")
-        st.code(fetch_from_api("optimize", user_sql_code), language="sql", line_numbers=True)
+# Unified Output Box
+st.subheader("Output:")
+st.text_area("Output", output_text, height=300, key="output_text")
