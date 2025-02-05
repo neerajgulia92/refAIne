@@ -1,0 +1,1 @@
+SELECT id, name, age FROM users WHERE age > 18 AND status = 'active' OR role = 'admin' ORDER BY name;

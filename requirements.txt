@@ -1,9 +1,9 @@
 boto3
 fastapi
 uvicorn
-PIL
-os
-json
-threading
 requests
 streamlit
+langchain_core
+langgraph
+langchain_aws
+langchain_community
