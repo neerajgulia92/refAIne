@@ -9,7 +9,7 @@ import threading
 import requests
 
 # Set page configuration (must be the first Streamlit command)
-st.set_page_config(page_title="ref[AI]ne - SQL Code Quality Tool", layout="wide")
+st.set_page_config(page_title="ref[AI]ne - Code Quality Tool", layout="wide")
 
 # Path for logo
 image_path = "logo.png"
@@ -49,9 +49,9 @@ logo_html = f"""
         <img src="data:image/png;base64,{logo_base64}" style="width: 80px; height: auto;">
     </div>
     <div class="header-title" style="font-size: 24px; font-weight: bold; color: #2c3e50;">
-        AI-Powered SQL Code Quality Tool
+        AI-Powered Code Quality Tool
         <div style="font-size: 14px; font-weight: normal; color: #7f8c8d;">
-            Enhance, standardize, optimize, and document your SQL code effortlessly.
+            Enhance, standardize, optimize, and document your SQL and Python code effortlessly.
         </div>
     </div>
 </div>
@@ -66,8 +66,8 @@ bedrock_runtime = boto3.client('bedrock-runtime', region_name='us-west-2')
 app = FastAPI()
 
 # Function to Call AWS Claude Model
-def call_claude_api(sql_code, task_type):
-    prompt = f"Task: {task_type}\n\nSQL Code:\n{sql_code}\n\nProvide the response accordingly."
+def call_claude_api(code, task_type, language):
+    prompt = f"Task: {task_type}\n\nLanguage: {language}\n\nCode:\n{code}\n\nProvide the response accordingly."
     kwargs = {
         "modelId": "anthropic.claude-3-5-sonnet-20240620-v1:0",
         "contentType": "application/json",
@@ -92,46 +92,51 @@ def call_claude_api(sql_code, task_type):
 # FastAPI Endpoints
 @app.post("/fix_syntax/")
 async def fix_syntax(data: dict):
-    sql_code = data.get("sql_code", "")
-    if not sql_code:
-        raise HTTPException(status_code=400, detail="SQL code is required")
-    return call_claude_api(sql_code, "fix_syntax")
+    code = data.get("code", "")
+    language = data.get("language", "SQL")
+    if not code:
+        raise HTTPException(status_code=400, detail="Code is required")
+    return call_claude_api(code, "fix_syntax", language)
 
 @app.post("/standardize/")
 async def standardize(data: dict):
-    sql_code = data.get("sql_code", "")
-    if not sql_code:
-        raise HTTPException(status_code=400, detail="SQL code is required")
-    return call_claude_api(sql_code, "standardize_code")
+    code = data.get("code", "")
+    language = data.get("language", "SQL")
+    if not code:
+        raise HTTPException(status_code=400, detail="Code is required")
+    return call_claude_api(code, "standardize_code", language)
 
 @app.post("/optimize/")
 async def optimize(data: dict):
-    sql_code = data.get("sql_code", "")
-    if not sql_code:
-        raise HTTPException(status_code=400, detail="SQL code is required")
-    return call_claude_api(sql_code, "optimize_sql")
+    code = data.get("code", "")
+    language = data.get("language", "SQL")
+    if not code:
+        raise HTTPException(status_code=400, detail="Code is required")
+    return call_claude_api(code, "optimize_code", language)
 
 @app.post("/document/")
 async def document(data: dict):
-    sql_code = data.get("sql_code", "")
-    if not sql_code:
-        raise HTTPException(status_code=400, detail="SQL code is required")
-    return call_claude_api(sql_code, "generate_documentation")
+    code = data.get("code", "")
+    language = data.get("language", "SQL")
+    if not code:
+        raise HTTPException(status_code=400, detail="Code is required")
+    return call_claude_api(code, "generate_documentation", language)
 
 # Start FastAPI Server in a Separate Thread
 def run_fastapi():
-    uvicorn.run(app, host="127.0.0.1", port=8502)  # Run on port 8502
+    uvicorn.run(app, host="127.0.0.1", port=8502)
 
 threading.Thread(target=run_fastapi, daemon=True).start()
 
 # Streamlit UI
-st.subheader("Paste your SQL code here:")
-user_sql_code = st.text_area("", height=300)
+st.subheader("Paste your code here:")
+user_code = st.text_area("", height=300)
+language_option = st.selectbox("Select Language", ["SQL", "Python"])
 
 # Function to Call FastAPI from Streamlit
-def fetch_from_api(endpoint, sql_code):
+def fetch_from_api(endpoint, code, language):
     try:
-        response = requests.post(f"http://127.0.0.1:8502/{endpoint}/", json={"sql_code": sql_code})
+        response = requests.post(f"http://127.0.0.1:8502/{endpoint}/", json={"code": code, "language": language})
         return response.json().get("output", "Error processing request")
     except Exception as e:
         return f"Error: {str(e)}"
@@ -141,13 +146,13 @@ col1, col2, col3, col4 = st.columns(4)
 output_text = ""
 
 if col1.button("Fix Syntax Errors"):
-    output_text = fetch_from_api("fix_syntax", user_sql_code)
+    output_text = fetch_from_api("fix_syntax", user_code, language_option)
 if col2.button("Standardize Code"):
-    output_text = fetch_from_api("standardize", user_sql_code)
+    output_text = fetch_from_api("standardize", user_code, language_option)
 if col3.button("Generate Documentation"):
-    output_text = fetch_from_api("document", user_sql_code)
-if col4.button("Optimize SQL Code"):
-    output_text = fetch_from_api("optimize", user_sql_code)
+    output_text = fetch_from_api("document", user_code, language_option)
+if col4.button("Optimize Code"):
+    output_text = fetch_from_api("optimize", user_code, language_option)
 
 # Unified Output Box
 st.subheader("Output:")
