@@ -99,24 +99,24 @@ async def fix_syntax(data: dict):
     sql_code = data.get("sql_code", "")
     if not sql_code:
         raise HTTPException(status_code=400, detail="SQL code is required")
-    response = syntax_fix_graph.invoke(sql_code)['response'].content
-    return response
+    response = syntax_fix_graph.invoke({"user_input": sql_code})['response'].content
+    return {"output": response}
 
 @app.post("/standardize/")
 async def standardize(data: dict):
     sql_code = data.get("sql_code", "")
     if not sql_code:
         raise HTTPException(status_code=400, detail="SQL code is required")
-    response = standardize_graph.invoke(sql_code)['response'].content
-    return response
+    response = standardize_graph.invoke({"user_input": sql_code})['response'].content
+    return {"output": response}
 
 @app.post("/optimize/")
 async def optimize(data: dict):
     sql_code = data.get("sql_code", "")
     if not sql_code:
         raise HTTPException(status_code=400, detail="SQL code is required")
-    response = optimize_sql_graph.invoke(sql_code)['response'].content
-    return response
+    response = optimize_sql_graph.invoke({"user_input": sql_code})['response'].content
+    return {"output": response}
 
 
 @app.post("/document/")
@@ -124,8 +124,8 @@ async def document(data: dict):
     sql_code = data.get("sql_code", "")
     if not sql_code:
         raise HTTPException(status_code=400, detail="SQL code is required")
-    response = document_sql_graph.invoke(sql_code)['response'].content
-    return response
+    response = document_sql_graph.invoke({"user_input": sql_code})['response'].content
+    return {"output": response}
 
 # Start FastAPI Server in a Separate Thread
 def run_fastapi():

@@ -21,9 +21,8 @@ def get_standardization_docs(state: SQLState) -> SQLState:
 
 def standardize_sql_code(state: SQLState) -> SQLState:
     """Get the SQL code from the user."""
-    system_message = SystemMessage("You are an expert at SQL. IF the user input is SQL code, THEN update the SQL code so that it complies with STANDARDS. If not, respond with 'Please provide SQL code.'")
-    standardization_message = SystemMessage(f"\n\nSTANDARDS\n---\n{state['standard_documents']}")
-    messages = [system_message, standardization_message, HumanMessage(state["user_input"])]
+    system_message = SystemMessage(f"You are an expert at SQL. IF the user input is SQL code, THEN update the SQL code so that it complies with STANDARDS. If not, respond with 'Please provide SQL code. \n\nSTANDARDS\n---\n{state['standard_documents']}")
+    messages = [system_message, HumanMessage(state["user_input"])]
     return {"response": llm.invoke(messages)}
 
 # Create a LangGraph
