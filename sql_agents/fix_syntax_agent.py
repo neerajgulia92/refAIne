@@ -1,6 +1,6 @@
 from langgraph.graph import StateGraph, START
 from langchain_aws import ChatBedrock
-from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.messages import SystemMessage, AIMessage, HumanMessage
 from typing_extensions import TypedDict
 
 llm = ChatBedrock(
@@ -15,8 +15,12 @@ class SQLState(TypedDict):
 
 def fix_sql_code(state: SQLState) -> SQLState:
     """Get the SQL code from the user."""
-    system_message = SystemMessage("You are an expert at SQL. IF the user input is a SQL code, THEN fix the syntax errors. If not, respond with 'Please provide SQL code.'")
-    messages = [system_message, HumanMessage(state["user_input"])]
+    system_message = SystemMessage("""You are an expert at SQL. IF the user input is a SQL code, THEN fix the syntax errors. If not, respond with 'Please provide SQL code.'""")
+    human_message = HumanMessage("select * from table column=value")
+    ai_message = AIMessage("SELECT * FROM table WHERE column = value")
+    human_message = HumanMessage("select ? from table column=value")
+    ai_message = AIMessage("SELECT * FROM table WHERE column = value")
+    messages = [system_message,human_message,ai_message, HumanMessage(state["user_input"])]
     return {"response": llm.invoke(messages)}
 
 # Create a LangGraph
