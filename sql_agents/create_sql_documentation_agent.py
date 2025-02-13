@@ -12,7 +12,6 @@ class SQLState(TypedDict):
     user_input: str
     response: str
 
-
 def document_sql_code(state: SQLState) -> SQLState:
     """Get the SQL code from the user."""
     system_message = SystemMessage("You are an expert at SQL. IF the user input is SQL code, THEN explain what the sql code does at a high level. If not, respond with 'Please provide SQL code.'")
@@ -25,6 +24,3 @@ workflow.add_edge(START, 'document_sql_code')
 
 # Compile the Graph
 document_sql_graph = workflow.compile()
-
-
-# print(document_sql_graph.invoke({"user_input": "select * from table where colA in ('a','b')"})['response'].content)

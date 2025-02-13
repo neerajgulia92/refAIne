@@ -18,10 +18,9 @@ def get_standardization_docs(state: SQLState) -> SQLState:
     standardization_docs = "SQL Commands need to be capitalized" # Add/get the standardization docs here
     return {"standard_documents": standardization_docs}
 
-
 def standardize_sql_code(state: SQLState) -> SQLState:
     """Get the SQL code from the user."""
-    system_message = SystemMessage(f"You are an expert at SQL. IF the user input is SQL code, THEN update the SQL code so that it complies with STANDARDS. If not, respond with 'Please provide SQL code. \n\nSTANDARDS\n---\n{state['standard_documents']}")
+    system_message = SystemMessage(f"You are an expert at SQL. IF the user input is SQL code, THEN standardise the SQL code with proper format and alignment and return only the standardised code without any explaination. If not, respond with 'Please provide SQL code. \n\nSTANDARDS\n---\n{state['standard_documents']}")
     messages = [system_message, HumanMessage(state["user_input"])]
     return {"response": llm.invoke(messages)}
 
@@ -31,7 +30,3 @@ workflow.add_edge(START, 'get_standardization_docs')
 
 # Compile the Graph
 standardize_graph = workflow.compile()
-
-
-# print(standardize_graph.invoke({"user_input": "select * from table"})['response'].content)
-# print(standardize_graph.invoke({"user_input": "fix the following sql select * from table"})['response'].content)
